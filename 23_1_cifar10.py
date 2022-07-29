@@ -32,22 +32,63 @@ def model_google():
     x = keras.layers.Conv2D(6, [3, 3], 1, 'same', activation='relu')(inputs)
 
     # inception-a
-    x1 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu')(inputs)
+    x1 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu', name='ia_1')(inputs)
 
     x2 = keras.layers.Conv2D(3, [1, 1], 1, 'same', activation='relu')(inputs)
-    x2 = keras.layers.Conv2D(10, [3, 3], 1, 'same', activation='relu')(x2)
+    x2 = keras.layers.Conv2D(10, [3, 3], 1, 'same', activation='relu', name='ia_2')(x2)
 
     x3 = keras.layers.Conv2D(3, [1, 1], 1, 'same', activation='relu')(inputs)
     x3 = keras.layers.Conv2D(10, [3, 3], 1, 'same', activation='relu')(x3)
-    x3 = keras.layers.Conv2D(10, [3, 3], 1, 'same', activation='relu')(x3)
+    x3 = keras.layers.Conv2D(10, [3, 3], 1, 'same', activation='relu', name='ia_3')(x3)
 
     x4 = keras.layers.AvgPool2D([3, 3], 1, 'same')(inputs)
-    x4 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu')(x4)
+    x4 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu', name='ia_4')(x4)
 
     x = keras.layers.concatenate([x1, x2, x3, x4], axis=3)
 
     # reduction-a
-    # 내일 합니다~
+    x1 = keras.layers.Conv2D(16, [3, 3], 2, 'valid', activation='relu', name='ra_1')(x)
+
+    x2 = keras.layers.Conv2D(6, [1, 1], 1, 'valid', activation='relu')(x)
+    x2 = keras.layers.Conv2D(16, [3, 3], 1, 'same', activation='relu')(x2)                  # same에 주의!
+    x2 = keras.layers.Conv2D(16, [3, 3], 2, 'valid', activation='relu', name='ra_2')(x2)
+
+    x3 = keras.layers.MaxPool2D([3, 3], 2, 'valid', name='ra_3')(x)
+
+    x = keras.layers.concatenate([x1, x2, x3], axis=3)
+
+    # # inception-b
+    x1 = keras.layers.Conv2D(24, [1, 1], 1, 'same', activation='relu', name='ib_1')(x)
+
+    x2 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu')(x)
+    x2 = keras.layers.Conv2D(24, [1, 7], 1, 'same', activation='relu')(x2)
+    x2 = keras.layers.Conv2D(24, [7, 1], 1, 'same', activation='relu', name='ib_2')(x2)
+
+    x3 = keras.layers.Conv2D(10, [1, 1], 1, 'same', activation='relu')(x)
+    x3 = keras.layers.Conv2D(16, [1, 7], 1, 'same', activation='relu')(x3)
+    x3 = keras.layers.Conv2D(16, [7, 1], 1, 'same', activation='relu')(x3)
+    x3 = keras.layers.Conv2D(24, [1, 7], 1, 'same', activation='relu')(x3)
+    x3 = keras.layers.Conv2D(24, [7, 1], 1, 'same', activation='relu', name='ib_3')(x3)
+
+    x4 = keras.layers.AvgPool2D([3, 3], 1, 'same')(x)
+    x4 = keras.layers.Conv2D(24, [1, 1], 1, 'same', activation='relu', name='ib_4')(x4)
+
+    x = keras.layers.concatenate([x1, x2, x3, x4], axis=3)
+
+    # reduction-b
+    x1 = keras.layers.Conv2D(16, [1, 1], 1, 'same', activation='relu')(x)
+    x1 = keras.layers.Conv2D(32, [3, 3], 2, 'valid', activation='relu', name='rb_1')(x1)
+
+    x2 = keras.layers.Conv2D(16, [1, 1], 1, 'same', activation='relu')(x)
+    x2 = keras.layers.Conv2D(24, [7, 1], 1, 'same', activation='relu')(x2)                  # same에 주의!
+    x2 = keras.layers.Conv2D(24, [1, 7], 1, 'same', activation='relu')(x2)
+    x2 = keras.layers.Conv2D(32, [3, 3], 2, 'valid', activation='relu', name='rb_2')(x2)
+
+    x3 = keras.layers.MaxPool2D([3, 3], 2, 'valid', name='rb_3')(x)
+
+    x = keras.layers.concatenate([x1, x2, x3], axis=3)
+
+    # -------------------------------------------------- #
 
     x = keras.layers.Flatten()(x)
 
@@ -55,7 +96,6 @@ def model_google():
 
     model = keras.Model(inputs, outputs)
     model.summary()
-    exit()
 
     return model
 
@@ -84,7 +124,7 @@ model.compile(optimizer=keras.optimizers.Adam(0.001),
               metrics=['acc'])
 
 # (3) 학습
-model.fit(x_train, y_train, epochs=10, batch_size=100, verbose=2,
+model.fit(x_train, y_train, epochs=10, batch_size=100, verbose=1,
           validation_data=[x_test, y_test])
 
 # (4) 결과 보기 + 예측
